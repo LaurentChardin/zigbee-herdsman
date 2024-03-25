@@ -5785,6 +5785,203 @@ const Clusters: Readonly<Record<ClusterName, Readonly<ClusterDefinition>>> = {
         },
         commandsResponse: {},
     },
+    /* // Migrating Cluster definition to Device definition in ZHC
+    manuSpecificYokisDevice: {
+        ID: 0xFC01,
+        manufacturerCode: ManufacturerCode.YOKIS,
+        attributes: {
+            configurationChanged: {ID: 0x0005, type: DataType.enum16}, //Indicate if the device configuration has changed. 0 to 0xFFFE -> No Change, 0xFFFF -> Change have been detected
+        },
+        commands: {
+            resetToFactorySettings: {
+                ID: 0x00,
+                response: 0,
+                parameters: [
+                    {name: 'uc_ResetAction', type: DataType.int8}, //0x00 -> Factory reset, 0x01 -> Configuration Reset, 0x02 -> Network Reset
+                ],
+            },
+            relaunchBleAdvert: {
+                ID: 0x11,
+                response: 0,
+                parameters: [],
+            },
+            openNetwork: {
+                ID: 0x12,
+                response: 0,
+                parameters: [
+                    {name: 'uc_OpeningTime', type: DataType.int8}, //Opening time wanted from 1 to 255 seconds,0 means closing the network.
+                ],
+            },
+        },
+        commandsResponse: {},
+    },
+    manuSpecificYokisInput: {
+        ID: 0xFC02,
+        manufacturerCode: ManufacturerCode.YOKIS,
+        attributes: {
+            inputMode: {ID: 0x0000, type: DataType.enum8}, //Indicate how the input should be handle: 0 -> Unknow, 1 -> Push button, 2 -> Switch, 3 -> Relay, 4 -> FP_IN
+            contactMode: {ID: 0x0001, type: DataType.boolean}, //Indicate the contact nature of the entry: 0 -> NC, 1 -> NO 
+            lastLocalCommandState: {ID: 0x0002, type: DataType.boolean}, //Indicate the last known state of the local BP (Bouton Poussoir, or Push Button)
+            lastBPConnectState: {ID: 0x0003, type: DataType.boolean}, //Indicate the last known state of the Bp connect
+            backlightIntensity: {ID: 0x0004, type: DataType.uint8}, //Indicate the backlight intensity applied on the keys. Only use for “Simon” product. Default: 0x0A, Min-Max: 0x00 - 0x64
+        },
+        commands: {
+            sendPress: { // Send to the server cluster a button press
+                ID: 0x00,
+                parameters: [],
+            },
+            sendRelease: { // Send to the server cluster a button release
+                ID: 0x01,
+                parameters: [],
+            },
+            selectInputMode: { // Change the Input mode to use switch input, wired relay or simple push button
+                ID: 0x02,
+                parameters: [
+                    {name: 'uc_InputMode', type: DataType.uint8}, // Input mode to be set. See @inputMode
+                ],
+            },
+        },
+        commandsResponse: {},
+    },
+    manuSpecificYokisEntryConfigurator: {
+        ID: 0xFC03,
+        manufacturerCode: ManufacturerCode.YOKIS,
+        attributes: {
+            eShortPress: {ID: 0x0001, type: DataType.boolean}, //Use to enable short press action
+            eLongPress: {ID: 0x0002, type: DataType.boolean}, //Use to enable long press action
+            longPressDuration: {ID: 0x0003, type: DataType.uint16}, //Define long Press duration in milliseconds. Default: 0x0BB8, Min-Max: 0x00 - 0x1388
+            timeBetweenPress: {ID: 0x0004, type: DataType.uint16}, //Define the maximum time between 2 press to keep in a sequence (In milliseconds). Default: 0x01F4, Min-Max: 0x0064 - 0x0258
+            eR12MLongPress: {ID: 0x0005, type: DataType.boolean}, //Enable R12M Long Press action
+            eLocalConfigLock: {ID: 0x0006, type: DataType.boolean}, //Disable local configuration
+        },
+        commands: {},
+        commandsResponse: {},
+    },
+    manuSpecificYokisSubSystem: {
+        ID: 0xFC04,
+        manufacturerCode: ManufacturerCode.YOKIS,
+        attributes: {
+            powerFailureMode: {ID: 0x0001, type: DataType.enum8}, // Define the device behavior after power failure : 0 -> LAST STATE, 1 -> OFF, 2 -> ON, 3-> BLINK
+        },
+        commands: {},
+        commandsResponse: {},
+    },
+    manuSpecificYokisLoadManager: {
+        ID: 0xFC05, // Details coming soon
+        manufacturerCode: ManufacturerCode.YOKIS,
+        attributes: {},
+        commands: {},
+        commandsResponse: {},
+    },
+    manuSpecificYokisLightControl: {
+        ID: 0xFC06,
+        // manufacturerCode: ManufacturerCode.YOKIS,  // Currently, Yokis devices do no support manufacturerCode in the ZCL frame, but we need to define it to avoid cluster definition collision !
+        attributes: {
+            onOff: {ID: 0x0000, type: DataType.boolean}, //Use to know which state is the relay
+            prevState: {ID: 0x0001, type: DataType.boolean}, //Indicate the previous state before action
+            onTimer: {ID: 0x0002, type: DataType.uint32}, //Define the ON embedded timer duration in seconds.  Default: 0x00, Min-Max: 0x00 – 0x00409980
+            eOnTimer: {ID: 0x0003, type: DataType.boolean}, //Enable (0x01) / Disable (0x00) use of onTimer.
+            preOnDelay: {ID: 0x0004, type: DataType.uint32}, //Define the PRE-ON embedded delay in seconds.  Default: 0x00, Min-Max: 0x00 – 0x00409980
+            ePreOnDelay: {ID: 0x0005, type: DataType.boolean}, //Enable (0x01) / Disable (0x00) use of PreOnTimer.
+            preOffDelay: {ID: 0x0008, type: DataType.uint32}, //Define the PRE-OFF embedded delay in seconds.  Default: 0x00, Min-Max: 0x00 – 0x00409980
+            ePreOffDelay: {ID: 0x0009, type: DataType.boolean}, //Enable (0x01) / Disable (0x00) PreOff delay.
+            pulseDuration: {ID: 0x000A, type: DataType.uint16}, //Set the value of ON pulse length. Default: 0x01F4, Min-Max: 0x0014 – 0xFFFE
+            timeType: {ID: 0x000B, type: DataType.enum8}, //Indicates the current Type of time selected that will be used during push button configuration: 0x00 -> Seconds, 0x01 -> Minutes
+            longOnDuration: {ID: 0x000C, type: DataType.uint32}, //Set the value of the LONG ON embedded timer in seconds.  Default: 0x5460 (1h), Min-Max: 0x00 – 0x00409980
+            operatingMode: {ID: 0x000D, type: DataType.enum8}, //Indicates the operating mode: 0x00 -> Timer, 0x01 -> Staircase, 0x02 -> Pulse
+            stopAnnounceTime: {ID: 0x0013, type: DataType.uint32}, //Time before goes off after the stop announce blinking. (In seconds).  Default: 0x0000, Min-Max: 0x00 – 0x00409980
+            eStopAnnounce: {ID: 0x0014, type: DataType.boolean}, //Enable (0x01) / Disable (0x00) the announcement before turning OFF.
+            eDeaf: {ID: 0x0015, type: DataType.boolean}, //Enable (0x01) / Disable (0x00) Deaf Actions.
+            eBlink: {ID: 0x0016, type: DataType.boolean}, //Enable (0x01) / Disable (0x00) Blink Actions.
+            blinkAmount: {ID: 0x0017, type: DataType.uint8}, //Number of blinks done when receiving the corresponding order. One blink is considered as one ON step followed by one OFF step. Default: 0x03, Min-Max: 0x00 – 0x14
+            blinkOnTime: {ID: 0x0018, type: DataType.uint32}, //Duration for the ON time on a blink period (In millisecond).  Default: 0x000001F4, Min-Max: 0x00 – 0x00409980
+            blinkOffTime: {ID: 0x0019, type: DataType.uint32}, //Duration for the OFF time on a blink period (In millisecond).  Default: 0x000001F4, Min-Max: 0x00 – 0x00409980
+            deafBlinkAmount: {ID: 0x001A, type: DataType.uint8}, //Define number of blink to do when receiving the DEAF action. One blink is considered as one ON step followed by one OFF step. Default: 0x03, Min-Max: 0x00 – 0x14
+            deafBlinkTime: {ID: 0x001B, type: DataType.uint16}, //Define duration of a blink ON (In millisecond). Default: 0x0320, Min-Max: 0x0064– 0x4E20
+            stateAfterBlink: {ID: 0x001C, type: DataType.enum8}, //Indicate which state must be apply after a blink sequence: 0x00 -> State before blinking, 0x01 -> OFF, 0x02 -> ON
+            eNcCommand: {ID: 0x001D, type: DataType.boolean}, //Define the output relay as Normaly close.
+        },
+        commands: {
+            moveToPosition: { // Move to position specified in uc_BrightnessEnd parameter. If TOR mode or MTR is set (no dimming) : if uc_BrightnessEnd under 50% will set to OFF else will be set to ON
+                ID: 0x02,
+                parameters: [
+                    {name: 'uc_BrightnessStart', type: DataType.uint8},
+                    {name: 'uc_BrightnessEnd', type: DataType.uint8},
+                    {name: 'ul_PreTimerValue', type: DataType.uint32},
+                    {name: 'b_PreTimerEnable', type: DataType.boolean},
+                    {name: 'ul_TimerValue', type: DataType.uint32},
+                    {name: 'b_TimerEnable', type: DataType.boolean},
+                    {name: 'ul_TransitionTime', type: DataType.uint32},
+                ],
+            },
+            pulse: { // This command allows the relay to be controlled with an impulse. The pulse time is defined by PulseLength.
+                ID: 0x04,
+                parameters: [
+                    {name: 'PulseLength', type: DataType.uint16},
+                ],
+            },
+            blink: { // With this command, the module is asked to perform a blinking sequence.
+                ID: 0x05,
+                parameters: [
+                    {name: 'uc_BlinkAmount', type: DataType.uint8},
+                    {name: 'ul_BlinkOnPeriod', type: DataType.uint32},
+                    {name: 'ul_BlinkOffPeriod', type: DataType.uint32},
+                    {name: 'uc_StateAfterSequence', type: DataType.uint8},
+                    {name: 'b_DoPeriodicCycle', type: DataType.boolean},
+                ],
+            },
+            deafBlink: { // Start a deaf sequene on a device only if the attribute “eDeaf” is set to Enable.
+                ID: 0x06,
+                parameters: [
+                    {name: 'uc_BlinkAmount', type: DataType.uint8},
+                    {name: 'ul_BlinkOnTime', type: DataType.uint16},
+                    {name: 'uc_SequenceAmount', type: DataType.uint8},
+                    {name: 'tuc_BlinkAmount', type: DataType.array},
+                ],
+            },
+            longOn: { // Switch output ON for LONG ON DURATION time.
+                ID: 0x07,
+                parameters: [],
+            },
+        },
+        commandsResponse: {},
+    },
+    manuSpecificYokisDimmer: {
+        ID: 0xFC07, // Details coming soon
+        manufacturerCode: ManufacturerCode.YOKIS,
+        attributes: {},
+        commands: {},
+        commandsResponse: {},
+    },
+    manuSpecificYokisWindowCovering: {
+        ID: 0xFC08, // Details coming soon
+        manufacturerCode: ManufacturerCode.YOKIS,
+        attributes: {},
+        commands: {},
+        commandsResponse: {},
+    },
+    manuSpecificYokisChannel: {
+        ID: 0xFC09, // Details coming soon
+        manufacturerCode: ManufacturerCode.YOKIS,
+        attributes: {},
+        commands: {},
+        commandsResponse: {},
+    },
+    manuSpecificYokisPilotWire: {
+        ID: 0xFC0A, // Details coming soon
+        manufacturerCode: ManufacturerCode.YOKIS,
+        attributes: {},
+        commands: {},
+        commandsResponse: {},
+    },
+    manuSpecificYokisStats: {
+        ID: 0xFCF0, // Details coming soon
+        manufacturerCode: ManufacturerCode.YOKIS,
+        attributes: {},
+        commands: {},
+        commandsResponse: {},
+    },
+    */
 };
 
 export default Clusters;
